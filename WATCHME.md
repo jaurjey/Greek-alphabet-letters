@@ -2,7 +2,7 @@
 
 Check out our model in action in this short demo:
 
-[➡️ Watch the demo video](https://drive.google.com/file/d/1_0zhy5yUYw3JDLJdzxOjkvst6nXFh5qv/view?usp=sharing)
+[➡️ Watch the demo video](https://vimeo.com/1119230291?share=copy)
 
 ## What’s in the video
 
