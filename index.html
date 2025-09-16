@@ -1,80 +1,336 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <title>Greek Alphabet Classifier</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        #webcam-container {
-            margin-top: 15px;
-        }
-        #label-container {
-            margin-top: 10px;
-        }
-        button {
-            padding: 10px 15px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🧿 Μάτι Machine — Greek Alphabet Oracle</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- TFJS + Teachable Machine -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+  <style>
+    :root{
+      --aegean:#0b58a7;
+      --aegean-dark:#083d73;
+      --white:#ffffff;
+      --sand:#f7f3ee;
+      --ink:#0b0c10;
+      --accent:#1fb6ff;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      min-height:100dvh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(1200px 800px at 110% -20%, rgba(11,88,167,0.25), transparent 60%),
+        radial-gradient(800px 600px at -10% 110%, rgba(31,182,255,0.25), transparent 60%),
+        linear-gradient(180deg, var(--sand), #e9f2ff 40%, var(--sand) 100%);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Noto Color Emoji", sans-serif;
+      color:var(--ink);
+      padding:24px;
+    }
+
+    .shell{
+      width: min(980px, 100%);
+      background: var(--white);
+      border-radius: 24px;
+      box-shadow:
+        0 10px 30px rgba(8,61,115,0.18),
+        inset 0 0 0 1px rgba(8,61,115,0.06);
+      overflow:hidden;
+      position:relative;
+    }
+
+    /* Greek key header */
+    .key{
+      --stripe: conic-gradient(from 0deg at 50% 50%, var(--aegean) 0 90deg, transparent 90deg 180deg, var(--aegean) 180deg 270deg, transparent 270deg 360deg);
+      height: 14px;
+      background:
+        repeating-linear-gradient(90deg, var(--aegean) 0 14px, transparent 14px 28px),
+        repeating-linear-gradient(0deg, var(--aegean) 0 14px, transparent 14px 28px);
+      filter: drop-shadow(0 1px 0 rgba(8,61,115,0.2));
+      opacity:.9;
+    }
+
+    header{
+      padding: 22px 22px 4px 22px;
+      display:flex; gap:14px; align-items:center; justify-content:space-between;
+      background: linear-gradient(180deg, var(--white), #f5fbff);
+    }
+
+    .title{
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    }
+
+    .title h1{
+      margin:0;
+      font-family: Cinzel, serif;
+      font-weight:800;
+      letter-spacing:.5px;
+      font-size: clamp(20px, 3.3vw, 34px);
+      color: var(--aegean-dark);
+      text-transform: uppercase;
+    }
+
+    .evil-eyes{
+      display:flex; gap:6px; font-size: clamp(18px, 3vw, 26px);
+    }
+
+    .sub{
+      font-size: 14px;
+      color: #355986;
+      margin-top:4px;
+    }
+
+    main{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+      padding: 18px 22px 24px 22px;
+    }
+
+    @media (max-width: 860px){
+      main{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      background:#ffffff;
+      border:1px solid rgba(8,61,115,.08);
+      border-radius:18px;
+      padding:16px;
+    }
+
+    .controls{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px;
+    }
+
+    button{
+      appearance:none; border:none; cursor:pointer;
+      border-radius:14px; padding:10px 14px; font-weight:700;
+      background:linear-gradient(180deg, var(--aegean), var(--aegean-dark));
+      color:#fff; letter-spacing:.3px; box-shadow:0 6px 16px rgba(8,61,115,.25);
+      transition: transform .06s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    button:hover{ filter:brightness(1.05) }
+    button:active{ transform: translateY(1px) }
+    button.secondary{
+      background:#ffffff; color: var(--aegean-dark);
+      border:1px solid rgba(8,61,115,.2);
+      box-shadow:none;
+    }
+    .pill{
+      padding:6px 10px; border-radius:999px; font-size:12px; background:#eef6ff; color:#2a66a1; border:1px solid #cfe6ff;
+    }
+
+    .webcam-wrap{
+      display:grid; grid-template-columns: 1fr;
+      place-items:center; gap:10px;
+    }
+    #webcam-container canvas{
+      border-radius:16px; width:100%; height:auto; max-width:480px;
+      border:1px solid rgba(8,61,115,.12);
+      background: #000;
+    }
+
+    .oracle{
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:10px 12px; border-radius:12px;
+      background: linear-gradient(180deg, #f5fbff, #eef6ff);
+      border:1px solid #cfe6ff; margin-top:8px;
+    }
+    .oracle b{ color: var(--aegean-dark); }
+
+    /* Predictions list */
+    #label-container > .row{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:8px 10px; border-radius:12px; margin-bottom:8px;
+      border:1px dashed rgba(8,61,115,.2); background:#fff;
+      font-variant-numeric: tabular-nums;
+    }
+    .prob{ font-weight:800 }
+
+    /* Footer note */
+    footer{
+      padding: 10px 22px 18px 22px; color:#3c5370; font-size:12px;
+      display:flex; align-items:center; gap:8px; justify-content:space-between; flex-wrap:wrap;
+    }
+
+    /* Pure CSS evil-eye badge */
+    .mati{
+      width:28px; height:28px; border-radius:50%;
+      background:
+        radial-gradient(circle at 50% 50%, #111 0 18%, #3aa7ff 18% 38%, #fff 38% 60%, #0b58a7 60% 100%);
+      box-shadow: 0 0 0 2px #0b58a7, 0 4px 10px rgba(8,61,115,.3);
+    }
+
+    .badge{
+      display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:14px;
+      background:#fff; border:1px solid rgba(8,61,115,.18);
+    }
+
+    .hidden{ display:none !important }
+  </style>
 </head>
 <body>
-    <h1>Greek Alphabet Classification with Teachable Machine</h1>
-    <button id="startBtn" type="button">Press to start your webcam</button>
-    <div id="webcam-container"></div>
-    <div id="label-container"></div>
+  <div class="shell">
+    <div class="key" aria-hidden="true"></div>
 
-    <script type="text/javascript">
-        // Link to your Teachable Machine model
-        const URL = "https://teachablemachine.withgoogle.com/models/c-JJPko48/";
+    <header>
+      <div class="title">
+        <div class="evil-eyes" aria-hidden="true">🧿🧿🧿</div>
+        <div>
+          <h1>Μάτι Machine — Greek Alphabet Oracle</h1>
+          <div class="sub">Say <em>yasou</em> to your webcam and let the oracle divine your letter. 🧿</div>
+        </div>
+      </div>
+      <div class="badge"><span class="mati" aria-hidden="true"></span><span>Protected by the Evil Eye</span></div>
+    </header>
 
-        let model, webcam, labelContainer, maxPredictions;
+    <main>
+      <!-- Left: Webcam & controls -->
+      <section class="panel">
+        <div class="controls">
+          <button id="startBtn" type="button">🧿 Start Webcam</button>
+          <button id="stopBtn" type="button" class="secondary" disabled>Stop</button>
+          <span id="status" class="pill">idle</span>
+        </div>
 
-        async function init() {
-            const modelURL = URL + "model.json";
-            const metadataURL = URL + "metadata.json";
+        <div class="webcam-wrap">
+          <div id="webcam-container" aria-live="polite"></div>
 
-            // Load the model and metadata
-            model = await tmImage.load(modelURL, metadataURL);
-            maxPredictions = model.getTotalClasses();
+          <div class="oracle hidden" id="oracle">
+            <span>Top prediction:</span>
+            <b id="topClass">—</b>
+            <span class="mati" aria-hidden="true" title="mati"></span>
+          </div>
+        </div>
+      </section>
 
-            // Setup webcam
-            const flip = true; // whether to flip the webcam
-            webcam = new tmImage.Webcam(200, 200, flip);
-            await webcam.setup(); // request access
-            await webcam.play();
-            window.requestAnimationFrame(loop);
+      <!-- Right: Predictions -->
+      <section class="panel">
+        <h3 style="margin:4px 0 10px 2px; font-family:Cinzel,serif; color:var(--aegean-dark);">Divinations</h3>
+        <div id="label-container" aria-live="polite" aria-label="Predictions list"></div>
+      </section>
+    </main>
 
-            // Add webcam and labels to DOM
-            document.getElementById("webcam-container").appendChild(webcam.canvas);
-            labelContainer = document.getElementById("label-container");
-            for (let i = 0; i < maxPredictions; i++) {
-                labelContainer.appendChild(document.createElement("div"));
-            }
+    <footer>
+      <div>Tip: good lighting + steady pose = stronger oracle vibes ✨</div>
+      <div class="evil-eyes" aria-hidden="true">🧿🧿🧿</div>
+    </footer>
+  </div>
+
+  <script>
+    // Your Teachable Machine model
+    const URL = "https://teachablemachine.withgoogle.com/models/c-JJPko48/";
+
+    let model, webcam, labelContainer, maxPredictions, loopReq;
+    const statusEl = document.getElementById("status");
+    const topClassEl = document.getElementById("topClass");
+    const oracle = document.getElementById("oracle");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+
+    startBtn.addEventListener("click", init);
+    stopBtn.addEventListener("click", stopWebcam);
+
+    async function init(){
+      try{
+        startBtn.disabled = true;
+        statusEl.textContent = "loading model…";
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        statusEl.textContent = "requesting camera…";
+        const flip = true;
+        webcam = new tmImage.Webcam(400, 300, flip);
+        await webcam.setup({ facingMode: "environment" }).catch(async () => {
+          // fallback to user camera
+          await webcam.setup();
+        });
+        await webcam.play();
+
+        // DOM mount
+        const wc = document.getElementById("webcam-container");
+        wc.innerHTML = "";
+        wc.appendChild(webcam.canvas);
+
+        labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = "";
+        for (let i = 0; i < maxPredictions; i++) {
+          const row = document.createElement("div");
+          row.className = "row";
+          const name = document.createElement("span");
+          name.className = "name";
+          const prob = document.createElement("span");
+          prob.className = "prob";
+          row.appendChild(name); row.appendChild(prob);
+          labelContainer.appendChild(row);
         }
 
-        async function loop() {
-            webcam.update();
-            await predict();
-            window.requestAnimationFrame(loop);
-        }
+        statusEl.textContent = "reading the vibes…";
+        stopBtn.disabled = false;
+        oracle.classList.add("hidden");
+        animate();
+      }catch(err){
+        console.error(err);
+        statusEl.textContent = "error: " + (err?.message || "check camera permissions");
+        startBtn.disabled = false;
+      }
+    }
 
-        async function predict() {
-            const prediction = await model.predict(webcam.canvas);
-            for (let i = 0; i < maxPredictions; i++) {
-                const classPrediction = 
-                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-                labelContainer.childNodes[i].innerHTML = classPrediction;
-            }
-        }
+    function animate(){
+      loopReq = window.requestAnimationFrame(animate);
+      webcam.update();
+      predict();
+    }
 
-        document.getElementById("startBtn").addEventListener("click", init);
-    </script>
+    async function predict(){
+      if(!model || !webcam) return;
+      const prediction = await model.predict(webcam.canvas);
+      let best = {className:"—", probability:-1};
+
+      for (let i = 0; i < maxPredictions; i++) {
+        const p = prediction[i];
+        if (p.probability > best.probability) best = p;
+
+        const row = labelContainer.children[i];
+        row.querySelector(".name").textContent = p.className;
+        row.querySelector(".prob").textContent = (p.probability*100).toFixed(1) + "%";
+      }
+
+      // highlight top prediction
+      topClassEl.textContent = `${best.className} (${(best.probability*100).toFixed(1)}%)`;
+      oracle.classList.toggle("hidden", best.probability < 0.25); // reveal when confident-ish
+    }
+
+    function stopWebcam(){
+      try{
+        if(loopReq) cancelAnimationFrame(loopReq);
+        if(webcam && webcam.stop) webcam.stop();
+        document.getElementById("webcam-container").innerHTML = "";
+        statusEl.textContent = "stopped — the oracle rests.";
+        stopBtn.disabled = true;
+        startBtn.disabled = false;
+        oracle.classList.add("hidden");
+      }catch(e){
+        console.warn(e);
+      }
+    }
+
+    // Clean up on page unload
+    window.addEventListener("beforeunload", stopWebcam);
+  </script>
 </body>
 </html>
-
