@@ -4,9 +4,9 @@
 The model is classifying **all 24 lowercase Greek alphabet letters**, plus one extra **“no letter”** class.
 
 ## What dataset are you using?
-We used a dataset created and trained with **Teachable Machine**.  
+I used a dataset created and trained with **Teachable Machine**.  
 Each class contained images of lowercase Greek letters in different fonts and styles.  
-For the “no letter” class, we included images of walls, people, and backgrounds to help the model distinguish letters from random noise.
+For the “no letter” class, I included images of walls, people, and backgrounds.
 
 ## What are the classes in the model?
 The model includes **25 classes**:
@@ -31,17 +31,14 @@ The model includes **25 classes**:
 ### What strategies did you employ to achieve good performance?
 - Kept the dataset balanced with exactly 25 images per class.  
 - Added a **“no letter” background class** to reduce false positives.  
-- Used diverse images (different fonts, colors, and textures).  
-- Experimented with learning rate and epochs until accuracy stabilized.  
+- Used images with high contrast
 
 ### Under what circumstances did the model fail? Do you have a hint on why it fails?
-- Misclassified letters when they looked **too similar to Latin characters** (e.g., ν vs. v, ο vs. o).  
-- Confusion increased with **blurry or low-resolution letters**.  
-- Sometimes labeled backgrounds incorrectly if the texture looked like letter strokes.  
+- Misclassified letters when they looked (e.g., ν vs. o).  
+- Confusion increased with **blurry or low-resolution letters**, especially on my webcam.  
 
 ### Which classes and class types were difficult to train? How did you overcome the issue?
-- **σ (sigma)** was tricky because of its two lowercase forms (σ and ς). We included both forms in the dataset.  
-- **ν (nu), ο (omicron), and ρ (rho)** were hard because of overlap with Latin letters. We used more varied fonts.  
+- **σ (sigma)** was tricky because of its two lowercase looks like "o".  
 - The **“no letter” class** sometimes confused the model, but including multiple types of backgrounds improved results.  
 
 ### Was it difficult to achieve good performance while increasing the number of classes? If so, why?
@@ -49,8 +46,7 @@ The model includes **25 classes**:
 - Increasing the number of classes made it easier to overfit, so we had to keep the dataset balanced and carefully curated.  
 
 ### How robust is your model to changes in the environment?
-- Works well across **fonts, backgrounds, and sizes**.  
-- Less robust with **handwriting, extreme rotations, or unusual styles**, since those were not well represented.  
+- Works well across **simple fonts, simple backgrounds, and sizes**.  
 
 ### Were you surprised by how well the model learned certain classes?
 - Yes, distinct letters like **ξ (xi)**, **ψ (psi)**, and **ω (omega)** performed strongly.  
